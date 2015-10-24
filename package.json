@@ -18,8 +18,17 @@
     "graphicsmagick",
     "imagemagick"
   ],
-  "author": "Michael Diolosa <michael.diolosa@gmail.com>",
-  "license": "ISC",
+  "author": {
+    "name": "Michael Diolosa",
+    "email": "michael.diolosa@gmail.com",
+    "url": "http://twitter.com/mbrio"
+  },
+  "license": "BSD-3-Clause",
+  "repository":
+  {
+    "type" : "git",
+    "url" : "https://github.com/mbrio/media-thumbnail-stream.git"
+  },
   "devDependencies": {
     "babel": "^5.8.23",
     "chai": "^3.4.0",
