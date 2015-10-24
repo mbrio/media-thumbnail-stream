@@ -1,0 +1,6 @@
+{
+  "esnext": true,
+  "node": true,
+  "strict": true,
+  "predef": ["describe", "it", "before"]
+}
