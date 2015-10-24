@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import fs from 'fs';
 import path from 'path';
 import { PassThrough } from 'stream';
-import VideoScreenshotStream from '../../src/VideoScreenshotStream';
+import { VideoScreenshotStream } from '../../index';
 
 function getVideoStream() {
   return fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v'));
