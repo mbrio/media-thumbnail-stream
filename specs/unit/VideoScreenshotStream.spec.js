@@ -103,6 +103,22 @@ describe('VideoScreenshotStream', () => {
       });
     });
 
+    it('should throw an error if seek time is out of bounds', done => {
+      let options = {
+        input: path.join(process.cwd(), 'specs/fixtures/sample.m4v'),
+        seek: 100000000
+      };
+
+      let vss = new VideoScreenshotStream();
+      vss.screenshot(options)
+        .then(thumbstream => {
+          thumbstream.on('error', err => {
+            expect(err.message).to.match(/seek time/);
+            done();
+          });
+        }).catch(done);
+    });
+
     it('should generate a screenshot', done => {
       let options = {
         input: path.join(process.cwd(), 'specs/fixtures/sample.m4v')

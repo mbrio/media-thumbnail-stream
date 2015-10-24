@@ -60,10 +60,10 @@ export default class VideoScreenshotStream {
 
   screenshot(options = {}) {
     if (!options.input) { return Promise.reject(new Error('You must specify an input stream.')); }
-    
+
     let filename = options.input;
-    let quality = options.quality || 2;
-    let seekTime = options.seek || '00:00:05';
+    let quality = Number(options.quality) || 2;
+    let seekTime = Number(options.seek) || 5;
 
     return this.findExecutable().then(ffmpegCmd => {
       return new Promise((resolve, reject) => {
@@ -88,7 +88,10 @@ export default class VideoScreenshotStream {
           else if (code) { error = new Error('ffmpeg exited with code ' + code); }
           else if (!dataWritten) { error = new Error('ffmpeg could not generate thumbnail, seek time may be out of bounds'); }
 
-          if (error) { proc.stdout.emit('error', error); }
+          if (error) {
+            failed = true;
+            proc.stdout.emit('error', error);
+          }
         });
 
         resolve(proc.stdout);
