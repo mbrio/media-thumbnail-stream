@@ -59,7 +59,8 @@ export default class VideoScreenshotStream {
   }
 
   screenshot(options = {}) {
-    if (!options.input) { reject(new Error('You must specify an input stream.')); }
+    if (!options.input) { return Promise.reject(new Error('You must specify an input stream.')); }
+    
     let filename = options.input;
     let quality = options.quality || 2;
     let seekTime = options.seek || '00:00:05';

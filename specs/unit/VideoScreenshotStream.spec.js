@@ -1,4 +1,5 @@
 "use strict";
+/* jshint expr:true */
 
 import { expect } from 'chai';
 import fs from 'fs';
@@ -92,6 +93,16 @@ describe('VideoScreenshotStream', () => {
   });
 
   describe('#screenshot', () => {
+    it('should throw an error if no input file is specified', done => {
+      let vss = new VideoScreenshotStream();
+      vss.screenshot().then(thumbstream => {
+        done(new Error('This should not be called'));
+      }).catch(err => {
+        expect(err.message).to.match(/input stream/);
+        done();
+      });
+    });
+
     it('should generate a screenshot', done => {
       let options = {
         input: path.join(process.cwd(), 'specs/fixtures/sample.m4v')
