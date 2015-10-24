@@ -61,18 +61,23 @@ export default class VideoScreenshotStream {
   screenshot(options = {}) {
     if (!options.input) { reject(new Error('You must specify an input stream.')); }
     let filename = options.input;
+    let quality = options.quality || 2;
+    let seekTime = options.seek || '00:00:05';
 
     return this.findExecutable().then(ffmpegCmd => {
       return new Promise((resolve, reject) => {
-        let ffmpegArgs = ['-i', filename, '-ss', '00:00:05', '-c:v', 'mjpeg', '-f', 'mjpeg', '-vframes', '1', '-'];
+        let ffmpegArgs = ['-i', filename, '-ss', seekTime, '-c:v', 'mjpeg', '-f', 'mjpeg', '-q:v', quality, '-vframes', 1, '-'];
 
         let proc = spawn(ffmpegCmd, ffmpegArgs);
         let failed = false;
+        let dataWritten = false;
 
         proc.on('error', err => {
           failed = true;
           proc.stdout.emit('error', err);
         });
+
+        proc.stdout.on('data', chunk => { dataWritten = true; });
 
         proc.on('close', function(code, signal) {
           if (failed) { return; }
@@ -80,6 +85,7 @@ export default class VideoScreenshotStream {
 
           if (signal) { error = new Error('ffmpeg was killed with signal ' + signal); }
           else if (code) { error = new Error('ffmpeg exited with code ' + code); }
+          else if (!dataWritten) { error = new Error('ffmpeg could not generate thumbnail, seek time may be out of bounds'); }
 
           if (error) { proc.stdout.emit('error', error); }
         });
