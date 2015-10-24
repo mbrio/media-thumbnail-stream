@@ -23,10 +23,7 @@
     "email": "michael.diolosa@gmail.com",
     "url": "http://twitter.com/mbrio"
   },
-  "license": {
-    "type": "BSD-3-Clause",
-    "url": "https://opensource.org/licenses/BSD-3-Clause"
-  },
+  "license": "BSD-3-Clause",
   "repository":
   {
     "type" : "git",
