@@ -58,16 +58,25 @@ export default class VideoScreenshotStream {
     });
   }
 
-  screenshot(options = {}) {
-    if (!options.input) { return Promise.reject(new Error('You must specify an input stream.')); }
+  isReadableStream(input) {
+    return ('readable' in input) && input.readable;
+  }
 
-    let filename = options.input;
+  screenshot(options = {}) {
+    if (!options.input ||
+        (typeof options.input !== 'string' &&
+         !this.isReadableStream(options.input))) {
+      return Promise.reject(new Error('You must specify a valid input stream.'));
+    }
+
+    let isStream = typeof options.input !== 'string';
+    let filename = isStream ? 'pipe:0' : options.input;
     let quality = Number(options.quality) || 2;
-    let seekTime = Number(options.seek) || 5;
+    let seek = Number(options.seek) || 5;
 
     return this.findExecutable().then(ffmpegCmd => {
       return new Promise((resolve, reject) => {
-        let ffmpegArgs = ['-i', filename, '-ss', seekTime, '-c:v', 'mjpeg', '-f', 'mjpeg', '-q:v', quality, '-vframes', 1, '-'];
+        let ffmpegArgs = ['-i', filename, '-ss', seek, '-c:v', 'mjpeg', '-f', 'mjpeg', '-q:v', quality, '-vframes', 1, '-'];
 
         let proc = spawn(ffmpegCmd, ffmpegArgs);
         let failed = false;
@@ -95,6 +104,7 @@ export default class VideoScreenshotStream {
         });
 
         resolve(proc.stdout);
+        if (isStream) { options.input.pipe(proc.stdin); }
       });
     });
   }

@@ -103,7 +103,7 @@ describe('VideoScreenshotStream', () => {
       });
     });
 
-    it('should throw an error if seek time is out of bounds', done => {
+    it('should throw an error if seek time is out of bounds when using filename', done => {
       let options = {
         input: path.join(process.cwd(), 'specs/fixtures/sample.m4v'),
         seek: 100000000
@@ -119,9 +119,65 @@ describe('VideoScreenshotStream', () => {
         }).catch(done);
     });
 
-    it('should generate a screenshot', done => {
+    it('should throw an error if seek time is out of bounds when using a stream', done => {
+      let options = {
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
+        seek: 100000000
+      };
+
+      let vss = new VideoScreenshotStream();
+      vss.screenshot(options)
+        .then(thumbstream => {
+          thumbstream.on('error', err => {
+            expect(err.message).to.match(/seek time/);
+            done();
+          });
+        }).catch(done);
+    });
+
+    it('should generate a screenshot from a file', done => {
       let options = {
         input: path.join(process.cwd(), 'specs/fixtures/sample.m4v')
+      };
+
+      let vss = new VideoScreenshotStream();
+      vss.screenshot(options).then(thumbstream => {
+        let data = [];
+        let writeStream = new PassThrough();
+        let failed = false;
+
+        writeStream._transform = function _transform(chunk, encoding, cb) {
+          data.push(chunk);
+          cb();
+        };
+
+        writeStream.on('error', err => {
+          if (failed) { return; }
+          failed = true;
+          done(err);
+        });
+
+        thumbstream.on('error', err => {
+          if (failed) { return; }
+          failed = true;
+          done(err);
+        });
+
+        thumbstream.on('close', () => {
+          if (failed) { return; }
+          let b = Buffer.concat(data);
+
+          expect(b).to.have.length.greaterThan(0);
+          done();
+        });
+
+        thumbstream.pipe(writeStream);
+      }).catch(done);
+    });
+
+    it('should generate a screenshot from a stream', done => {
+      let options = {
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v'))
       };
 
       let vss = new VideoScreenshotStream();
