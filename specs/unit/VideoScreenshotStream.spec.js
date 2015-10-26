@@ -93,7 +93,7 @@ describe('VideoScreenshotStream', () => {
   });
 
   describe('#screenshot', () => {
-    it('should throw an error if no output file is specified', done => {
+    it('should throw an error if no output stream is specified', done => {
       let vss = new VideoScreenshotStream();
       vss.screenshot({
         input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v'))
@@ -105,7 +105,7 @@ describe('VideoScreenshotStream', () => {
       });
     });
 
-    it('should throw an error if no input file is specified', done => {
+    it('should throw an error if no input stream is specified', done => {
       let vss = new VideoScreenshotStream();
       vss.screenshot({
         output: new BufferStream()
@@ -143,8 +143,6 @@ describe('VideoScreenshotStream', () => {
       });
     });
 
-    it('should not throw an error if no output stream is supplied but a callback is');
-
     it('should throw an error if seek time is out of bounds when using a stream', done => {
       let options = {
         input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
@@ -177,6 +175,36 @@ describe('VideoScreenshotStream', () => {
 
         expect(b).to.have.length.greaterThan(0);
         done();
+      }).catch(done);
+    });
+
+    it('should generate a screenshot thumbnail from a stream', done => {
+      let gmlib = require('gm');
+      let gm = gmlib.subClass({ imageMagick: true });
+
+      let options = {
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
+        callback: (stdout, stderr) => {
+          let output = new BufferStream();
+
+          let thumbStream = gm(stdout)
+            .resize(16)
+            .stream((err, innerStdout, innerStderr) => {
+              innerStdout.on('end', () => {
+                let b = output.toBuffer();
+
+                expect(b).to.have.length.greaterThan(0);
+                done();
+              });
+              innerStdout.pipe(output);
+            });
+        }
+      };
+
+      let vss = new VideoScreenshotStream();
+
+      vss.screenshot(options).then(() => {
+
       }).catch(done);
     });
 
