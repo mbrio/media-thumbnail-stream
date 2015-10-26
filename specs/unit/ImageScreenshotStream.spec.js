@@ -60,6 +60,22 @@ describe('ImageScreenshotStream', () => {
       });
     });
 
+    it('should throw an error if an unsupported data type is used as a stream', done => {
+      let options = {
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
+        output: new BufferStream()
+      };
+
+      let vss = new ImageScreenshotStream();
+      vss.screenshot(options)
+        .then(() => {
+          done(new Error('This should not be called'));
+        }).catch(err => {
+          expect(err.message).to.match(/file may not be supported/);
+          done();
+        });
+    });
+
     it('should generate a screenshot thumbnail from a stream', done => {
       let output = new BufferStream();
 

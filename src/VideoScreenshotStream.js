@@ -75,7 +75,7 @@ export default class VideoScreenshotStream extends ImageScreenshotStream {
     return new Promise((resolve, reject) => {
       function handleExit(err) {
         if (exitHandled) { return; }
-        if (err) { exitError = err; }
+        if (err && !exitError) { exitError = err; }
 
         if (videoDone && photoDone) {
           exitHandled = true;
@@ -187,7 +187,7 @@ export default class VideoScreenshotStream extends ImageScreenshotStream {
 
           if (signal) { error = new Error('ffmpeg was killed with signal ' + signal); }
           else if (code) { error = new Error('ffmpeg exited with code ' + code); }
-          else if (!dataWritten) { error = new Error('ffmpeg could not generate thumbnail, seek time may be out of bounds or file may not be supported'); }
+          else if (!dataWritten) { error = new Error('Could not generate video thumbnail, seek time may be out of bounds or file may not be supported'); }
 
           processExited = true;
           procClosed = true;

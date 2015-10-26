@@ -43,5 +43,39 @@ describe('index', () => {
         done();
       }).catch(done);
     });
+
+    it('should fail if trying to process an image as a video', done => {
+      let output = new BufferStream();
+
+      let options = {
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
+        output: output,
+        mediaType: 'image'
+      };
+
+      mediaThumbnail(options).then(() => {
+        done(new Error('Should not get here'));
+      }).catch(err => {
+        expect(err.message).to.match(/file may not be supported/);
+        done();
+      });
+    });
+
+    it('should fail if trying to process a video as an image', done => {
+      let output = new BufferStream();
+
+      let options = {
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.jpg')),
+        output: output,
+        mediaType: 'video'
+      };
+
+      mediaThumbnail(options).then(() => {
+        done(new Error('Should not get here'));
+      }).catch(err => {
+        expect(err.message).to.match(/file may not be supported/);
+        done();
+      });
+    });
   });
 });

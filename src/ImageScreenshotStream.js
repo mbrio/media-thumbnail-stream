@@ -39,6 +39,7 @@ export default class ImageScreenshotStream extends ScreenshotStream {
       let exitError = null;
       let exitHandled = false;
       let outputStream = options.output;
+      let dataWritten = false;
 
       function handleExit(err) {
         if (exitHandled) { return; }
@@ -87,8 +88,15 @@ export default class ImageScreenshotStream extends ScreenshotStream {
         innerStdout.on('close', () => {
           procClosed = true;
           processExited = true;
-          handleExit();
+
+          if (!dataWritten) {
+            handleExit(new Error('Could not generate image thumbnail, file may not be supported'));
+          } else {
+            handleExit();
+          }
         });
+
+        innerStdout.on('data', chunk => { dataWritten = true; });
 
         if(typeof options.callback === 'function') { options.callback(innerStdout, innerStderr); }
         else { innerStdout.pipe(options.output); }
