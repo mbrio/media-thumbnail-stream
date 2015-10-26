@@ -59,17 +59,20 @@ export default class VideoScreenshotStream {
   }
 
   isReadableStream(input) {
-    return input && ('readable' in input) && input.readable;
+    return input && input.readable;
   }
 
   isWritableStream(output) {
-    console.log(output);
-    return output && ('readable' in output) && output.readable;
+    return output && output.readable;
   }
 
   screenshot(options = {}) {
     if (!this.isReadableStream(options.input)) {
       return Promise.reject(new Error('You must specify a valid input stream.'));
+    }
+
+    if (!this.isWritableStream(options.output)) {
+      return Promise.reject(new Error('You must specify a valid output stream.'));
     }
 
     let quality = Number(options.quality) || 2;

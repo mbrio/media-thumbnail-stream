@@ -93,9 +93,49 @@ describe('VideoScreenshotStream', () => {
   });
 
   describe('#screenshot', () => {
+    it('should throw an error if no output file is specified', done => {
+      let vss = new VideoScreenshotStream();
+      vss.screenshot({
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v'))
+      }).then(thumbstream => {
+        done(new Error('This should not be called'));
+      }).catch(err => {
+        expect(err.message).to.match(/output stream/);
+        done();
+      });
+    });
+
     it('should throw an error if no input file is specified', done => {
       let vss = new VideoScreenshotStream();
-      vss.screenshot().then(thumbstream => {
+      vss.screenshot({
+        output: new BufferStream()
+      }).then(thumbstream => {
+        done(new Error('This should not be called'));
+      }).catch(err => {
+        expect(err.message).to.match(/input stream/);
+        done();
+      });
+    });
+
+    it('should throw an error if incorrect output specified', done => {
+      let vss = new VideoScreenshotStream();
+      vss.screenshot({
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
+        output: 'test'
+      }).then(thumbstream => {
+        done(new Error('This should not be called'));
+      }).catch(err => {
+        expect(err.message).to.match(/output stream/);
+        done();
+      });
+    });
+
+    it('should throw an error with incorrect input specified', done => {
+      let vss = new VideoScreenshotStream();
+      vss.screenshot({
+        input: 'test',
+        output: new BufferStream()
+      }).then(thumbstream => {
         done(new Error('This should not be called'));
       }).catch(err => {
         expect(err.message).to.match(/input stream/);
@@ -106,6 +146,7 @@ describe('VideoScreenshotStream', () => {
     it('should throw an error if seek time is out of bounds when using a stream', done => {
       let options = {
         input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
+        output: new BufferStream(),
         seek: 100000000
       };
 
@@ -120,11 +161,13 @@ describe('VideoScreenshotStream', () => {
     });
 
     it('should generate a screenshot from a stream', done => {
+      let output = new BufferStream();
+
       let options = {
-        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v'))
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
+        output: output
       };
 
-      let output = new BufferStream();
       let vss = new VideoScreenshotStream();
 
       vss.screenshot(options).then(thumbstream => {
