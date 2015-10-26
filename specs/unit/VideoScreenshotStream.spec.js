@@ -8,10 +8,6 @@ import sinon from 'sinon';
 import BufferStream from '../BufferStream';
 import { VideoScreenshotStream } from '../../index';
 
-function getVideoStream() {
-  return fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v'));
-}
-
 describe('VideoScreenshotStream', () => {
   describe('#findExecutable()', () => {
     it('should find the installed ffmpeg off of the PATH', done => {
@@ -207,7 +203,7 @@ describe('VideoScreenshotStream', () => {
       let spy = sinon.spy(configProcessor);
 
       let options = {
-        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/red.jpg')),
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
         configureImageProcessor: spy,
         callback: (stdout, stderr) => {
           let errored = false;

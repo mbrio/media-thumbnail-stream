@@ -13,7 +13,7 @@ describe('ImageScreenshotStream', () => {
     it('should throw an error if no output stream is specified', done => {
       let vss = new ImageScreenshotStream();
       vss.screenshot({
-        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/red.jpg'))
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.jpg'))
       }).then(() => {
         done(new Error('This should not be called'));
       }).catch(err => {
@@ -37,7 +37,7 @@ describe('ImageScreenshotStream', () => {
     it('should throw an error if incorrect output specified', done => {
       let vss = new ImageScreenshotStream();
       vss.screenshot({
-        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/red.jpg')),
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.jpg')),
         output: 'test'
       }).then(() => {
         done(new Error('This should not be called'));
@@ -64,7 +64,7 @@ describe('ImageScreenshotStream', () => {
       let output = new BufferStream();
 
       let options = {
-        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/red.jpg')),
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.jpg')),
         output: output
       };
 
@@ -82,7 +82,7 @@ describe('ImageScreenshotStream', () => {
       let output = new BufferStream();
 
       let options = {
-        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/red.jpg')),
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.jpg')),
         callback: (stdout, stderr) => {
           stdout.on('end', () => {
             let b = output.toBuffer();
@@ -106,7 +106,7 @@ describe('ImageScreenshotStream', () => {
       let spy = sinon.spy(configProcessor);
 
       let options = {
-        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/red.jpg')),
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.jpg')),
         configureImageProcessor: spy,
         callback: (stdout, stderr) => {
           stdout.on('end', () => {
