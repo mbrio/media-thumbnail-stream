@@ -4,6 +4,7 @@
 import { expect } from 'chai';
 import fs from 'fs';
 import path from 'path';
+import sinon from 'sinon';
 import BufferStream from '../BufferStream';
 import { VideoScreenshotStream } from '../../index';
 
@@ -178,64 +179,52 @@ describe('VideoScreenshotStream', () => {
       }).catch(done);
     });
 
-    it('should generate a screenshot thumbnail from a stream', done => {
-      let gmlib = require('gm');
-      let gm = gmlib.subClass({ imageMagick: true });
+    it('should generate a screenshot from a stream and pass it to a callback', done => {
+      let output = new BufferStream();
 
       let options = {
         input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
         callback: (stdout, stderr) => {
-          let output = new BufferStream();
+          stdout.on('end', () => {
+            let b = output.toBuffer();
 
-          let thumbStream = gm(stdout)
-            .resize(16)
-            .stream((err, innerStdout, innerStderr) => {
-              innerStdout.on('end', () => {
-                let b = output.toBuffer();
+            expect(b).to.have.length.greaterThan(0);
+            done();
+          });
 
-                expect(b).to.have.length.greaterThan(0);
-                done();
-              });
-              innerStdout.pipe(output);
-            });
+          stdout.pipe(output);
         }
       };
 
       let vss = new VideoScreenshotStream();
 
-      vss.screenshot(options).then(() => {
-
-      }).catch(done);
+      vss.screenshot(options).catch(done);
     });
 
-    it('should generate a screenshot thumbnail from a stream', done => {
-      let gmlib = require('gm');
-      let gm = gmlib.subClass({ imageMagick: true });
+    it('should allow for the configuration of image processor', done => {
+      let output = new BufferStream();
+      let configProcessor = (processor) => { return processor.resize(16); };
+      let spy = sinon.spy(configProcessor);
 
       let options = {
         input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
+        configureImageProcessor: spy,
         callback: (stdout, stderr) => {
-          let output = new BufferStream();
+          stdout.on('end', () => {
+            let b = output.toBuffer();
 
-          let thumbStream = gm(stdout)
-            .resize(16)
-            .stream((err, innerStdout, innerStderr) => {
-              innerStdout.on('end', () => {
-                let b = output.toBuffer();
+            expect(spy.calledOnce).to.be.true;
+            expect(b).to.have.length.greaterThan(0);
+            done();
+          });
 
-                expect(b).to.have.length.greaterThan(0);
-                done();
-              });
-              innerStdout.pipe(output);
-            });
+          stdout.pipe(output);
         }
       };
 
       let vss = new VideoScreenshotStream();
 
-      vss.screenshot(options).then(() => {
-
-      }).catch(done);
+      vss.screenshot(options).catch(done);
     });
   });
 });
