@@ -59,35 +59,49 @@ export default class VideoScreenshotStream {
   }
 
   isReadableStream(input) {
-    return ('readable' in input) && input.readable;
+    return input && ('readable' in input) && input.readable;
+  }
+
+  isWritableStream(output) {
+    console.log(output);
+    return output && ('readable' in output) && output.readable;
   }
 
   screenshot(options = {}) {
-    if (!options.input ||
-        (typeof options.input !== 'string' &&
-         !this.isReadableStream(options.input))) {
+    if (!this.isReadableStream(options.input)) {
       return Promise.reject(new Error('You must specify a valid input stream.'));
     }
 
-    let isStream = typeof options.input !== 'string';
-    let filename = isStream ? 'pipe:0' : options.input;
     let quality = Number(options.quality) || 2;
     let seek = Number(options.seek) || 5;
 
+    options.input.pause();
+
     return this.findExecutable().then(ffmpegCmd => {
       return new Promise((resolve, reject) => {
-        let ffmpegArgs = ['-i', filename, '-ss', seek, '-c:v', 'mjpeg', '-f', 'mjpeg', '-q:v', quality, '-vframes', 1, '-'];
+        let ffmpegArgs = ['-i', 'pipe:0', '-ss', seek, '-c:v', 'mjpeg', '-f', 'mjpeg', '-q:v', quality, '-vframes', 1, '-'];
 
         let proc = spawn(ffmpegCmd, ffmpegArgs);
+
         let failed = false;
         let dataWritten = false;
+
+        proc.stdout.on('data', chunk => { dataWritten = true; });
+        proc.stdin.on('error', () => {});
+
+        options.input.on('error', err => {
+          failed = true;
+          proc.stdout.emit('error', err);
+          proc.kill();
+        });
+
+        options.input.resume();
+        options.input.pipe(proc.stdin);
 
         proc.on('error', err => {
           failed = true;
           proc.stdout.emit('error', err);
         });
-
-        proc.stdout.on('data', chunk => { dataWritten = true; });
 
         proc.on('close', function(code, signal) {
           if (failed) { return; }
@@ -104,7 +118,6 @@ export default class VideoScreenshotStream {
         });
 
         resolve(proc.stdout);
-        if (isStream) { options.input.pipe(proc.stdin); }
       });
     });
   }
