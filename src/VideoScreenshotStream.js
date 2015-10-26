@@ -75,7 +75,6 @@ export default class VideoScreenshotStream {
       return Promise.reject(new Error('You must specify a valid output stream.'));
     }
 
-    let quality = Number(options.quality) || 2;
     let seek = Number(options.seek) || 5;
 
     options.input.pause();
@@ -100,7 +99,7 @@ export default class VideoScreenshotStream {
           }
         }
 
-        let ffmpegArgs = ['-i', 'pipe:0', '-ss', seek, '-c:v', 'mjpeg', '-f', 'mjpeg', '-q:v', quality, '-vframes', 1, '-'];
+        let ffmpegArgs = ['-i', 'pipe:0', '-ss', seek, '-f', 'mjpeg', '-q:v', 1, '-vframes', 1, '-'];
         let proc = spawn(ffmpegCmd, ffmpegArgs);
 
         let dataWritten = false;
