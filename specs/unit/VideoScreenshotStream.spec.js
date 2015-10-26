@@ -97,7 +97,7 @@ describe('VideoScreenshotStream', () => {
       let vss = new VideoScreenshotStream();
       vss.screenshot({
         input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v'))
-      }).then(thumbstream => {
+      }).then(() => {
         done(new Error('This should not be called'));
       }).catch(err => {
         expect(err.message).to.match(/output stream/);
@@ -109,7 +109,7 @@ describe('VideoScreenshotStream', () => {
       let vss = new VideoScreenshotStream();
       vss.screenshot({
         output: new BufferStream()
-      }).then(thumbstream => {
+      }).then(() => {
         done(new Error('This should not be called'));
       }).catch(err => {
         expect(err.message).to.match(/input stream/);
@@ -122,7 +122,7 @@ describe('VideoScreenshotStream', () => {
       vss.screenshot({
         input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
         output: 'test'
-      }).then(thumbstream => {
+      }).then(() => {
         done(new Error('This should not be called'));
       }).catch(err => {
         expect(err.message).to.match(/output stream/);
@@ -135,13 +135,15 @@ describe('VideoScreenshotStream', () => {
       vss.screenshot({
         input: 'test',
         output: new BufferStream()
-      }).then(thumbstream => {
+      }).then(() => {
         done(new Error('This should not be called'));
       }).catch(err => {
         expect(err.message).to.match(/input stream/);
         done();
       });
     });
+
+    it('should not throw an error if no output stream is supplied but a callback is');
 
     it('should throw an error if seek time is out of bounds when using a stream', done => {
       let options = {
@@ -152,7 +154,7 @@ describe('VideoScreenshotStream', () => {
 
       let vss = new VideoScreenshotStream();
       vss.screenshot(options)
-        .then(thumbstream => {
+        .then(() => {
           done(new Error('This should not be called'));
         }).catch(err => {
           expect(err.message).to.match(/seek time/);
@@ -170,11 +172,41 @@ describe('VideoScreenshotStream', () => {
 
       let vss = new VideoScreenshotStream();
 
-      vss.screenshot(options).then(thumbstream => {
+      vss.screenshot(options).then(() => {
         let b = output.toBuffer();
 
         expect(b).to.have.length.greaterThan(0);
         done();
+      }).catch(done);
+    });
+
+    it('should generate a screenshot thumbnail from a stream', done => {
+      let gmlib = require('gm');
+      let gm = gmlib.subClass({ imageMagick: true });
+
+      let options = {
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
+        callback: (stdout, stderr) => {
+          let output = new BufferStream();
+
+          let thumbStream = gm(stdout)
+            .resize(16)
+            .stream((err, innerStdout, innerStderr) => {
+              innerStdout.on('end', () => {
+                let b = output.toBuffer();
+
+                expect(b).to.have.length.greaterThan(0);
+                done();
+              });
+              innerStdout.pipe(output);
+            });
+        }
+      };
+
+      let vss = new VideoScreenshotStream();
+
+      vss.screenshot(options).then(() => {
+
       }).catch(done);
     });
   });

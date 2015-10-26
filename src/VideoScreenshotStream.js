@@ -1,9 +1,10 @@
-"use strict";
+'use strict';
 
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import which from 'which';
+import ScreenshotStream from './ScreenshotStream';
 import { spawn } from 'child_process';
 
 function _findExecutableUsingWhich(file) {
@@ -15,8 +16,9 @@ function _findExecutableUsingWhich(file) {
   });
 }
 
-export default class VideoScreenshotStream {
+export default class VideoScreenshotStream extends ScreenshotStream {
   constructor(options = {}) {
+    super(options);
     this.options = options;
     this._cachedExecutable = null;
   }
@@ -58,21 +60,13 @@ export default class VideoScreenshotStream {
     });
   }
 
-  isReadableStream(input) {
-    return input && input.readable;
-  }
-
-  isWritableStream(output) {
-    return output && output.readable;
-  }
-
   screenshot(options = {}) {
     if (!this.isReadableStream(options.input)) {
       return Promise.reject(new Error('You must specify a valid input stream.'));
     }
 
-    if (!this.isWritableStream(options.output)) {
-      return Promise.reject(new Error('You must specify a valid output stream.'));
+    if (!this.isWritableStream(options.output) && typeof options.callback !== 'function') {
+      return Promise.reject(new Error('You must specify a valid output stream or callback.'));
     }
 
     let seek = Number(options.seek) || 5;
@@ -95,7 +89,7 @@ export default class VideoScreenshotStream {
           if (processExited && stdoutClosed && stdinClosed && procClosed) {
             exitHandled = true;
             if (exitError) { reject(exitError); }
-            else { resolve(options.output); }
+            else { resolve(); }
           }
         }
 
@@ -122,17 +116,19 @@ export default class VideoScreenshotStream {
           handleExit(err);
         });
 
-        options.output.on('error', err => {
-          processExited = true;
-          proc.kill();
-          handleExit(err);
-        });
-        options.output.on('close', () => {
-          setTimeout(() => {
-            handleExit();
+        if (options.output) {
+          options.output.on('error', err => {
+            processExited = true;
             proc.kill();
-          }, 20);
-        });
+            handleExit(err);
+          });
+          options.output.on('close', () => {
+            setTimeout(() => {
+              handleExit();
+              proc.kill();
+            }, 20);
+          });
+        }
 
         proc.on('error', err => {
           processExited = true;
@@ -154,7 +150,9 @@ export default class VideoScreenshotStream {
 
         options.input.resume();
         options.input.pipe(proc.stdin);
-        proc.stdout.pipe(options.output);
+
+        if(typeof options.callback === 'function') { options.callback(proc.stdout, proc.stderr); }
+        else { proc.stdout.pipe(options.output); }
       });
     });
   }
