@@ -5,6 +5,7 @@ import { expect } from 'chai';
 import fs from 'fs';
 import path from 'path';
 import BufferStream from '../BufferStream';
+import sinon from 'sinon';
 import { ImageScreenshotStream } from '../../index';
 
 describe('ImageScreenshotStream', () => {
@@ -86,6 +87,32 @@ describe('ImageScreenshotStream', () => {
           stdout.on('end', () => {
             let b = output.toBuffer();
 
+            expect(b).to.have.length.greaterThan(0);
+            done();
+          });
+
+          stdout.pipe(output);
+        }
+      };
+
+      let vss = new ImageScreenshotStream();
+
+      vss.screenshot(options).catch(done);
+    });
+
+    it('should allow for the configuration of image processor', done => {
+      let output = new BufferStream();
+      let configProcessor = (processor) => { return processor.resize(16); };
+      let spy = sinon.spy(configProcessor);
+
+      let options = {
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/red.jpg')),
+        configureImageProcessor: spy,
+        callback: (stdout, stderr) => {
+          stdout.on('end', () => {
+            let b = output.toBuffer();
+
+            expect(spy.calledOnce).to.be.true;
             expect(b).to.have.length.greaterThan(0);
             done();
           });

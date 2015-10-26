@@ -62,9 +62,12 @@ export default class ImageScreenshotStream extends ScreenshotStream {
 
       options.input.resume();
 
-      gm(options.input)
-        .resize(16)
-        .stream((err, innerStdout, innerStderr) => {
+      let processor = gm(options.input);
+      if (typeof options.configureImageProcessor === 'function') {
+        processor = options.configureImageProcessor(processor);
+      }
+
+      processor.stream((err, innerStdout, innerStderr) => {
           innerStdout.on('error', err => {
             processExited = true;
             handleExit(err);
