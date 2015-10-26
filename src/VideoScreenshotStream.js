@@ -82,45 +82,80 @@ export default class VideoScreenshotStream {
 
     return this.findExecutable().then(ffmpegCmd => {
       return new Promise((resolve, reject) => {
-        let ffmpegArgs = ['-i', 'pipe:0', '-ss', seek, '-c:v', 'mjpeg', '-f', 'mjpeg', '-q:v', quality, '-vframes', 1, '-'];
+        let stdoutClosed = false;
+        let stdinClosed = false;
+        let procClosed = false;
+        let processExited = false;
+        let exitError = null;
+        let exitHandled = false;
 
+        function handleExit(err) {
+          if (exitHandled) { return; }
+          if (err) { exitError = err; }
+
+          if (processExited && stdoutClosed && stdinClosed && procClosed) {
+            exitHandled = true;
+            if (exitError) { reject(exitError); }
+            else { resolve(options.output); }
+          }
+        }
+
+        let ffmpegArgs = ['-i', 'pipe:0', '-ss', seek, '-c:v', 'mjpeg', '-f', 'mjpeg', '-q:v', quality, '-vframes', 1, '-'];
         let proc = spawn(ffmpegCmd, ffmpegArgs);
 
-        let failed = false;
         let dataWritten = false;
 
         proc.stdout.on('data', chunk => { dataWritten = true; });
+        proc.stdout.on('close', () => {
+          stdoutClosed = true;
+          handleExit();
+        });
+
         proc.stdin.on('error', () => {});
+        proc.stdin.on('close', () => {
+          stdinClosed = true;
+          handleExit();
+        });
 
         options.input.on('error', err => {
-          failed = true;
-          proc.stdout.emit('error', err);
+          processExited = true;
           proc.kill();
+          handleExit(err);
         });
 
-        options.input.resume();
-        options.input.pipe(proc.stdin);
+        options.output.on('error', err => {
+          processExited = true;
+          proc.kill();
+          handleExit(err);
+        });
+        options.output.on('close', () => {
+          setTimeout(() => {
+            handleExit();
+            proc.kill();
+          }, 20);
+        });
 
         proc.on('error', err => {
-          failed = true;
-          proc.stdout.emit('error', err);
+          processExited = true;
+          handleExit(err);
         });
 
-        proc.on('close', function(code, signal) {
-          if (failed) { return; }
+        proc.on('exit', function(code, signal) {
           let error = null;
 
           if (signal) { error = new Error('ffmpeg was killed with signal ' + signal); }
           else if (code) { error = new Error('ffmpeg exited with code ' + code); }
           else if (!dataWritten) { error = new Error('ffmpeg could not generate thumbnail, seek time may be out of bounds'); }
 
-          if (error) {
-            failed = true;
-            proc.stdout.emit('error', error);
-          }
+          processExited = true;
+          procClosed = true;
+
+          handleExit(error);
         });
 
-        resolve(proc.stdout);
+        options.input.resume();
+        options.input.pipe(proc.stdin);
+        proc.stdout.pipe(options.output);
       });
     });
   }

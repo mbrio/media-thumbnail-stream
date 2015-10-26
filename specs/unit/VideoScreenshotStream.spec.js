@@ -153,11 +153,11 @@ describe('VideoScreenshotStream', () => {
       let vss = new VideoScreenshotStream();
       vss.screenshot(options)
         .then(thumbstream => {
-          thumbstream.on('error', err => {
-            expect(err.message).to.match(/seek time/);
-            done();
-          });
-        }).catch(done);
+          done(new Error('This should not be called'));
+        }).catch(err => {
+          expect(err.message).to.match(/seek time/);
+          done();
+        });
     });
 
     it('should generate a screenshot from a stream', done => {
@@ -171,14 +171,10 @@ describe('VideoScreenshotStream', () => {
       let vss = new VideoScreenshotStream();
 
       vss.screenshot(options).then(thumbstream => {
-        thumbstream.on('close', () => {
-          let b = output.toBuffer();
+        let b = output.toBuffer();
 
-          expect(b).to.have.length.greaterThan(0);
-          done();
-        });
-
-        thumbstream.pipe(output);
+        expect(b).to.have.length.greaterThan(0);
+        done();
       }).catch(done);
     });
   });
