@@ -122,6 +122,7 @@ export default class VideoScreenshotStream extends ImageScreenshotStream {
         let processExited = false;
         let exitError = null;
         let exitHandled = false;
+        let outputStream = options.output;
 
         function handleExit(err) {
           if (exitHandled) { return; }
@@ -136,6 +137,7 @@ export default class VideoScreenshotStream extends ImageScreenshotStream {
 
         let ffmpegArgs = ['-i', 'pipe:0', '-ss', seek, '-f', 'mjpeg', '-q:v', 1, '-vframes', 1, '-'];
         let proc = spawn(ffmpegCmd, ffmpegArgs);
+        if (typeof options.callback === 'function') { outputStream = proc.stdout; }
 
         let dataWritten = false;
 
@@ -152,6 +154,8 @@ export default class VideoScreenshotStream extends ImageScreenshotStream {
         });
 
         options.input.on('error', err => {
+          if (outputStream) { outputStream.emit('error', err); }
+
           processExited = true;
           proc.kill();
           handleExit(err);
@@ -172,6 +176,8 @@ export default class VideoScreenshotStream extends ImageScreenshotStream {
         }
 
         proc.on('error', err => {
+          if (outputStream) { outputStream.emit('error', err); }
+
           processExited = true;
           handleExit(err);
         });
@@ -181,11 +187,12 @@ export default class VideoScreenshotStream extends ImageScreenshotStream {
 
           if (signal) { error = new Error('ffmpeg was killed with signal ' + signal); }
           else if (code) { error = new Error('ffmpeg exited with code ' + code); }
-          else if (!dataWritten) { error = new Error('ffmpeg could not generate thumbnail, seek time may be out of bounds'); }
+          else if (!dataWritten) { error = new Error('ffmpeg could not generate thumbnail, seek time may be out of bounds or file may not be supported'); }
 
           processExited = true;
           procClosed = true;
 
+          if (error && outputStream) { outputStream.emit('error', error); }
           handleExit(error);
         });
 

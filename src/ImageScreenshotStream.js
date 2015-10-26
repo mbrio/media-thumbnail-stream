@@ -38,6 +38,7 @@ export default class ImageScreenshotStream extends ScreenshotStream {
       let processExited = false;
       let exitError = null;
       let exitHandled = false;
+      let outputStream = options.output;
 
       function handleExit(err) {
         if (exitHandled) { return; }
@@ -51,6 +52,7 @@ export default class ImageScreenshotStream extends ScreenshotStream {
       }
 
       options.input.on('error', err => {
+        if(outputStream) { outputStream.emit('error', err); }
         processExited = true;
         handleExit(err);
       });
@@ -75,20 +77,22 @@ export default class ImageScreenshotStream extends ScreenshotStream {
       }
 
       processor.stream((err, innerStdout, innerStderr) => {
-          innerStdout.on('error', err => {
-            processExited = true;
-            handleExit(err);
-          });
+        if (typeof options.callback === 'function') { outputStream = innerStdout; }
 
-          innerStdout.on('close', () => {
-            procClosed = true;
-            processExited = true;
-            handleExit();
-          });
-
-          if(typeof options.callback === 'function') { options.callback(innerStdout, innerStderr); }
-          else { innerStdout.pipe(options.output); }
+        innerStdout.on('error', err => {
+          processExited = true;
+          handleExit(err);
         });
+
+        innerStdout.on('close', () => {
+          procClosed = true;
+          processExited = true;
+          handleExit();
+        });
+
+        if(typeof options.callback === 'function') { options.callback(innerStdout, innerStderr); }
+        else { innerStdout.pipe(options.output); }
+      });
     });
   }
 }

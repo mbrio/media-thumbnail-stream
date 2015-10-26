@@ -207,10 +207,14 @@ describe('VideoScreenshotStream', () => {
       let spy = sinon.spy(configProcessor);
 
       let options = {
-        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/sample.m4v')),
+        input: fs.createReadStream(path.join(process.cwd(), 'specs/fixtures/red.jpg')),
         configureImageProcessor: spy,
         callback: (stdout, stderr) => {
+          let errored = false;
+          stdout.on('error', err => { errored = true; });
+
           stdout.on('end', () => {
+            if (errored) { return; }
             let b = output.toBuffer();
 
             expect(spy.calledOnce).to.be.true;
