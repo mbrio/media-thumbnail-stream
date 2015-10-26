@@ -14,7 +14,7 @@ export default class ImageScreenshotStream extends ScreenshotStream {
     return gmlib.subClass({ imageMagick: this.options.useImageMagick });
   }
 
-  screenshot(options = {}) {
+  validateOptionStreams(options) {
     if (!this.isReadableStream(options.input)) {
       return Promise.reject(new Error('You must specify a valid input stream.'));
     }
@@ -22,6 +22,13 @@ export default class ImageScreenshotStream extends ScreenshotStream {
     if (!this.isWritableStream(options.output) && typeof options.callback !== 'function') {
       return Promise.reject(new Error('You must specify a valid output stream or callback.'));
     }
+
+    return null;
+  }
+
+  screenshot(options = {}) {
+    let errorPromise = this.validateOptionStreams(options);
+    if (errorPromise) { return errorPromise; }
 
     let gm = this.createImageProcessorInstance();
     options.input.pause();

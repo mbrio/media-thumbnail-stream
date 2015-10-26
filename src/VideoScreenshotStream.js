@@ -5,6 +5,7 @@ import path from 'path';
 import os from 'os';
 import which from 'which';
 import ScreenshotStream from './ScreenshotStream';
+import ImageScreenshotStream from './ImageScreenshotStream';
 import { spawn } from 'child_process';
 
 function _findExecutableUsingWhich(file) {
@@ -16,10 +17,9 @@ function _findExecutableUsingWhich(file) {
   });
 }
 
-export default class VideoScreenshotStream extends ScreenshotStream {
+export default class VideoScreenshotStream extends ImageScreenshotStream {
   constructor(options = {}) {
     super(options);
-    this.options = options;
     this._cachedExecutable = null;
   }
 
@@ -61,13 +61,54 @@ export default class VideoScreenshotStream extends ScreenshotStream {
   }
 
   screenshot(options = {}) {
-    if (!this.isReadableStream(options.input)) {
-      return Promise.reject(new Error('You must specify a valid input stream.'));
-    }
+    let errorPromise = this.validateOptionStreams(options);
+    if (errorPromise) { return errorPromise; }
 
-    if (!this.isWritableStream(options.output) && typeof options.callback !== 'function') {
-      return Promise.reject(new Error('You must specify a valid output stream or callback.'));
-    }
+    let imageStreamOptions = Object.create(options);
+    let initialCallback = options.callback;
+    let initialOutput = options.output;
+    let exitError = null;
+    let exitHandled = false;
+    let videoDone = false;
+    let photoDone = false;
+
+    return new Promise((resolve, reject) => {
+      function handleExit(err) {
+        if (exitHandled) { return; }
+        if (err) { exitError = err; }
+
+        if (videoDone && photoDone) {
+          exitHandled = true;
+          if (exitError) { reject(exitError); }
+          else { resolve(); }
+        }
+      }
+
+      options.callback = (stdout, stderr) => {
+        imageStreamOptions.input = stdout;
+        if (imageStreamOptions.output) { delete imageStreamOptions.output; }
+
+        imageStreamOptions.callback = (innerStdout, innerStderr) => {
+          if (typeof initialCallback === 'function') { initialCallback(innerStdout, innerStderr); }
+          else { innerStdout.pipe(initialOutput); }
+        };
+
+        super.screenshot(imageStreamOptions).catch(handleExit).then(() => {
+          photoDone = true;
+          handleExit();
+        });
+      };
+
+      this._videoScreenshot(options).catch(handleExit).then(() => {
+        videoDone = true;
+        handleExit();
+      });
+    });
+  }
+
+  _videoScreenshot(options = {}) {
+    let errorPromise = this.validateOptionStreams(options);
+    if (errorPromise) { return errorPromise; }
 
     let seek = Number(options.seek) || 5;
 
@@ -151,7 +192,7 @@ export default class VideoScreenshotStream extends ScreenshotStream {
         options.input.resume();
         options.input.pipe(proc.stdin);
 
-        if(typeof options.callback === 'function') { options.callback(proc.stdout, proc.stderr); }
+        if (typeof options.callback === 'function') { options.callback(proc.stdout, proc.stderr); }
         else { proc.stdout.pipe(options.output); }
       });
     });
