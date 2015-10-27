@@ -1,8 +1,8 @@
 'use strict';
 
-import { Transform } from 'stream';
+import { PassThrough } from 'stream';
 
-export default class BufferStream extends Transform {
+export default class BufferStream extends PassThrough {
   constructor() {
     super();
 
@@ -11,7 +11,7 @@ export default class BufferStream extends Transform {
 
   _transform(chunk, encoding, callback) {
     this._data.push(chunk);
-    callback();
+    super._transform(chunk, encoding, callback);
   }
 
   toBuffer() {
