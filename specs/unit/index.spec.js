@@ -7,7 +7,7 @@ import path from 'path';
 import sinon from 'sinon';
 import BufferStream from '../BufferStream';
 import mediaThumbnail from '../../src';
-import { VideoScreenshotStream } from '../../src';
+import { VideoScreenshotStream } from '../../lib';
 
 describe('index', () => {
   describe('#mediaThumbnail()', () => {

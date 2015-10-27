@@ -4,12 +4,13 @@
   "description": "A tool for generating image and video thumbnail streams.",
   "main": "lib/index.js",
   "scripts": {
-    "lint:app": "jshint --config=.jshintrc src/*.js",
-    "lint:specs": "jshint --config=.jshintrc specs/*.js specs/**/*.js",
-    "lint": "npm run lint:app && npm run lint:specs",
-    "pretest": "npm run lint",
+    "lint-app": "jshint --config=.jshintrc src/*.js",
+    "lint-specs": "jshint --config=.jshintrc specs/*.js specs/**/*.js",
+    "lint": "npm run lint-app && npm run lint-specs",
+    "pretest": "npm run build",
+    "prebuild": "npm run lint",
     "test": "mocha specs/bootstrap.js specs/unit/*.js",
-    "build": "babel -o lib/media-thumbnail-stream.js src/index.js",
+    "build": "babel -d lib/ src/",
     "prepublish": "npm run build"
   },
   "keywords": [
