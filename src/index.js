@@ -15,9 +15,9 @@ export default function mediaThumbnail(options = {}) {
   let processor = null;
 
   if (options.mediaType === 'video') {
-    processor = new VideoScreenshotStream();
+    processor = new VideoScreenshotStream({ useImageMagick: !!options.useImageMagick });
   } else {
-    processor = new ImageScreenshotStream();
+    processor = new ImageScreenshotStream({ useImageMagick: !!options.useImageMagick });
   }
 
   return processor.screenshot(options);
