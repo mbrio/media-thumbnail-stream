@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import sinon from 'sinon';
 import BufferStream from '../BufferStream';
-import { VideoScreenshotStream } from '../../index';
+import { VideoScreenshotStream } from '../../src';
 
 describe('VideoScreenshotStream', () => {
   describe('#findExecutable()', () => {

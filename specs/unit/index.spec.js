@@ -6,8 +6,8 @@ import fs from 'fs';
 import path from 'path';
 import sinon from 'sinon';
 import BufferStream from '../BufferStream';
-import mediaThumbnail from '../../index';
-import { VideoScreenshotStream } from '../../index';
+import mediaThumbnail from '../../src';
+import { VideoScreenshotStream } from '../../src';
 
 describe('index', () => {
   describe('#mediaThumbnail()', () => {

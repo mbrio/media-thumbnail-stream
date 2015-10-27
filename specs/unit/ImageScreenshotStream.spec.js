@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import BufferStream from '../BufferStream';
 import sinon from 'sinon';
-import { ImageScreenshotStream } from '../../index';
+import { ImageScreenshotStream } from '../../src';
 
 describe('ImageScreenshotStream', () => {
   describe('#screenshot', () => {

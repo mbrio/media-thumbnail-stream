@@ -1,8 +1,8 @@
 "use strict";
 
-import VideoScreenshotStream from './src/VideoScreenshotStream';
-import ImageScreenshotStream from './src/ImageScreenshotStream';
-import ScreenshotStream from './src/ScreenshotStream';
+import VideoScreenshotStream from './VideoScreenshotStream';
+import ImageScreenshotStream from './ImageScreenshotStream';
+import ScreenshotStream from './ScreenshotStream';
 
 export { ScreenshotStream, VideoScreenshotStream, ImageScreenshotStream };
 

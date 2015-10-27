@@ -2,13 +2,15 @@
   "name": "media-thumbnail-stream",
   "version": "1.0.0",
   "description": "A tool for generating image and video thumbnail streams.",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "lint:app": "jshint --config=.jshintrc *.js index.js src/*.js",
+    "lint:app": "jshint --config=.jshintrc src/*.js",
     "lint:specs": "jshint --config=.jshintrc specs/*.js specs/**/*.js",
     "lint": "npm run lint:app && npm run lint:specs",
     "pretest": "npm run lint",
-    "test": "mocha specs/bootstrap.js specs/unit/*.js"
+    "test": "mocha specs/bootstrap.js specs/unit/*.js",
+    "build": "babel -o lib/media-thumbnail-stream.js src/index.js",
+    "prepublish": "npm run build"
   },
   "keywords": [
     "image",
