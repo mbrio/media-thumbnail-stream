@@ -10,7 +10,7 @@
     "pretest": "npm run build",
     "prebuild": "npm run lint",
     "test": "mocha specs/bootstrap.js specs/unit/*.js",
-    "build": "babel -d lib/ src/",
+    "build": "babel --presets es2015,stage-0 -d lib/ src/",
     "prepublish": "npm run build"
   },
   "keywords": [
@@ -32,7 +32,6 @@
     "url": "https://github.com/mbrio/media-thumbnail-stream.git"
   },
   "devDependencies": {
-    "babel": "^6.5.2",
     "chai": "^3.4.0",
     "jshint": "^2.8.0",
     "mocha": "^2.3.3",
@@ -40,6 +39,9 @@
     "sinon": "^1.17.2"
   },
   "dependencies": {
+    "babel-cli": "^6.9.0",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-stage-0": "^6.5.0",
     "gm": "^1.20.0",
     "which": "^1.2.0"
   }
