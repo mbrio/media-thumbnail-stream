@@ -27,13 +27,12 @@
     "url": "http://twitter.com/mbrio"
   },
   "license": "BSD-3-Clause",
-  "repository":
-  {
-    "type" : "git",
-    "url" : "https://github.com/mbrio/media-thumbnail-stream.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mbrio/media-thumbnail-stream.git"
   },
   "devDependencies": {
-    "babel": "^5.8.23",
+    "babel": "^6.5.2",
     "chai": "^3.4.0",
     "jshint": "^2.8.0",
     "mocha": "^2.3.3",
