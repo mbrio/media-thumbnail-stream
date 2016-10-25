@@ -9,86 +9,6 @@ import BufferStream from '../BufferStream';
 import { VideoScreenshotStream } from '../../lib';
 
 describe('VideoScreenshotStream', () => {
-  describe('#findExecutable()', () => {
-    it('should find the installed ffmpeg off of the PATH', done => {
-      let vss = new VideoScreenshotStream();
-
-      vss.findExecutableUsingWhich().then(filepath => {
-        expect(filepath).to.exist;
-        done();
-      }).catch(done);
-    });
-
-    it('should find the installed ffmpeg using options', done => {
-      let vss = new VideoScreenshotStream({ ffmpeg: '/usr/local/bin/ffmpeg' });
-
-      vss.findExecutableUsingOptions().then(filepath => {
-        expect(filepath).to.exist;
-        done();
-      }).catch(done);
-    });
-
-    it('should find the installed ffmpeg using environment', done => {
-      let prevDecoder = process.env.FFMPEG_PATH;
-
-      process.env.FFMPEG_PATH = '/usr/local/bin/ffmpeg';
-      let vss = new VideoScreenshotStream();
-
-      vss.findExecutableUsingEnvironment().then(filepath => {
-        expect(filepath).to.exist;
-
-        process.env.FFMPEG_PATH = prevDecoder;
-        done();
-      }).catch(err => {
-        process.env.FFMPEG_PATH = prevDecoder;
-        done(err);
-      });
-    });
-
-    it('should find the installed ffmpeg by prioritizing options over all', done => {
-      let prevDecoder = process.env.FFMPEG_PATH;
-
-      process.env.FFMPEG_PATH = '/usr/local/bin/totallybogus';
-      let vss = new VideoScreenshotStream({ ffmpeg: process.execPath });
-
-      vss.findExecutable().then(filepath => {
-        expect(filepath).to.equal(process.execPath);
-
-        process.env.FFMPEG_PATH = prevDecoder;
-        done();
-      }).catch(err => {
-        process.env.FFMPEG_PATH = prevDecoder;
-        done(err);
-      });
-    });
-
-    it('should find the installed ffmpeg by prioritizing the environment over which', done => {
-      let prevDecoder = process.env.FFMPEG_PATH;
-
-      process.env.FFMPEG_PATH = process.execPath;
-      let vss = new VideoScreenshotStream();
-
-      vss.findExecutable().then(filepath => {
-        expect(filepath).to.equal(process.execPath);
-
-        process.env.FFMPEG_PATH = prevDecoder;
-        done();
-      }).catch(err => {
-        process.env.FFMPEG_PATH = prevDecoder;
-        done(err);
-      });
-    });
-
-    it('should find the installed ffmpeg with which', done => {
-      let vss = new VideoScreenshotStream();
-
-      vss.findExecutable().then(filepath => {
-        expect(filepath).to.exist;
-        done();
-      }).catch(done);
-    });
-  });
-
   describe('#screenshot', () => {
     it('should throw an error if no output stream is specified', done => {
       let vss = new VideoScreenshotStream();
@@ -151,8 +71,9 @@ describe('VideoScreenshotStream', () => {
       vss.screenshot(options)
         .then(() => {
           done(new Error('This should not be called'));
-        }).catch(err => {
-          expect(err.message).to.match(/seek time/);
+        })
+        .catch(err => {
+          expect(err.message).to.match(/ENOENT/);
           done();
         });
     });

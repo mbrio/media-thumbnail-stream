@@ -73,7 +73,7 @@ describe('index', () => {
       mediaThumbnail(options).then(() => {
         done(new Error('Should not get here'));
       }).catch(err => {
-        expect(err.message).to.match(/file may not be supported/);
+        expect(err.message).to.match(/input duration/);
         done();
       });
     });
