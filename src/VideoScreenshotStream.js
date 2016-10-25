@@ -88,12 +88,20 @@ export default class VideoScreenshotStream extends ImageScreenshotStream {
         if (err) {
           exitHandled = true;
 
-          // CLEANUP
+          try {
+            fs.unlinkSync(tmpPath);
+            fs.unlinkSync(tmpSsPath);
+          } catch (ex) {}
+
           reject(err);
         } else if (complete) {
           exitHandled = true;
 
-          // CLEANUP
+          try {
+            fs.unlinkSync(tmpPath);
+            fs.unlinkSync(tmpSsPath);
+          } catch (ex) {}
+
           resolve();
         }
       }
