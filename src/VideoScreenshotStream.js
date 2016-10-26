@@ -69,12 +69,12 @@ export default class VideoScreenshotStream extends ImageScreenshotStream {
     const { output: outputStream, input: inputStream } = options;
     const tmpDir = options.tmpDir || '/tmp/media-thumbnail-stream';
     const uuid = UUIDGenerator.v4();
-    const tmpFilename = `${uuid}${path.extname(inputStream.path)}`;
+    const tmpFilename = uuid;
     const tmpPath = path.join(tmpDir, tmpFilename);
     const tmpSsFilename = `${uuid}-ss.png`;
     const tmpSsPath = path.join(tmpDir, tmpSsFilename);
 
-    options.input.pause();
+    inputStream.pause();
 
     mkdirp.sync(tmpDir);
 
@@ -108,12 +108,12 @@ export default class VideoScreenshotStream extends ImageScreenshotStream {
 
       let tmpStream = fs.createWriteStream(tmpPath);
 
-      options.input.on('error', handleExit);
-      if (typeof options.callback !== 'function') { options.output.on('error', handleExit); }
+      inputStream.on('error', handleExit);
+      if (typeof options.callback !== 'function') { outputStream.on('error', handleExit); }
       tmpStream.on('error', handleExit);
 
-      options.input.resume();
-      options.input.pipe(tmpStream);
+      inputStream.resume();
+      inputStream.pipe(tmpStream);
 
       tmpStream.on('close', () => {
         ffmpeg(tmpPath)
@@ -127,7 +127,7 @@ export default class VideoScreenshotStream extends ImageScreenshotStream {
             });
 
             if (typeof options.callback === 'function') { options.callback(ssStream, null); }
-            else { ssStream.pipe(options.output); }
+            else { ssStream.pipe(outputStream); }
           })
   				.screenshots({
   					timestamps: [seek],
@@ -135,92 +135,6 @@ export default class VideoScreenshotStream extends ImageScreenshotStream {
   					folder: tmpDir
   				});
       });
-
-      // let stdoutClosed = false;
-      // let stdinClosed = false;
-      // let procClosed = false;
-      // let processExited = false;
-      // let exitError = null;
-      // let exitHandled = false;
-      // let outputStream = options.output;
-      //
-      // function handleExit(err) {
-      //   if (exitHandled) { return; }
-      //   if (err) { exitError = err; }
-      //
-      //   if (processExited && stdoutClosed && stdinClosed && procClosed) {
-      //     exitHandled = true;
-      //     if (exitError) { reject(exitError); }
-      //     else { resolve(); }
-      //   }
-      // }
-      //
-      // // let ffmpegArgs = ['-i', 'pipe:0', '-ss', seek, '-f', 'mjpeg', '-q:v', 1, '-vframes', 1, '-'];
-      // // let proc = spawn(ffmpegCmd, ffmpegArgs);
-      // if (typeof options.callback === 'function') { outputStream = proc.stdout; }
-      //
-      // let dataWritten = false;
-      //
-      // proc.stdout.on('data', chunk => { dataWritten = true; });
-      // proc.stdout.on('close', () => {
-      //   stdoutClosed = true;
-      //   handleExit();
-      // });
-      //
-      // proc.stdin.on('error', () => {});
-      // proc.stdin.on('close', () => {
-      //   stdinClosed = true;
-      //   handleExit();
-      // });
-      //
-      // options.input.on('error', err => {
-      //   if (outputStream) { outputStream.emit('error', err); }
-      //
-      //   processExited = true;
-      //   proc.kill();
-      //   handleExit(err);
-      // });
-      //
-      // if (options.output) {
-      //   options.output.on('error', err => {
-      //     processExited = true;
-      //     proc.kill();
-      //     handleExit(err);
-      //   });
-      //   options.output.on('close', () => {
-      //     setTimeout(() => {
-      //       handleExit();
-      //       proc.kill();
-      //     }, 20);
-      //   });
-      // }
-      //
-      // proc.on('error', err => {
-      //   if (outputStream) { outputStream.emit('error', err); }
-      //
-      //   processExited = true;
-      //   handleExit(err);
-      // });
-      //
-      // proc.on('exit', function(code, signal) {
-      //   let error = null;
-      //
-      //   if (signal) { error = new Error('ffmpeg was killed with signal ' + signal); }
-      //   else if (code) { error = new Error('ffmpeg exited with code ' + code); }
-      //   else if (!dataWritten) { error = new Error('Could not generate video thumbnail, seek time may be out of bounds or file may not be supported'); }
-      //
-      //   processExited = true;
-      //   procClosed = true;
-      //
-      //   if (error && outputStream) { outputStream.emit('error', error); }
-      //   handleExit(error);
-      // });
-      //
-      // options.input.resume();
-      // options.input.pipe(proc.stdin);
-      //
-      // if (typeof options.callback === 'function') { options.callback(proc.stdout, proc.stderr); }
-      // else { proc.stdout.pipe(options.output); }
     });
   }
 }
